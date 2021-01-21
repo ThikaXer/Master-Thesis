@@ -1,9 +1,7 @@
 from Beweis_rank_d import Beweis as Beweis
 import pickle
 
-    
-    
-# Pappos
+# Non-Pappus
 print('Pappus')
 P_points = set(range(1, 10))  # Set of all points
 P_collinearities = [  # List of collinearities
@@ -23,7 +21,7 @@ with open('Pappus/P_integer.pickle', 'wb') as f:
 
 
 
-#Desargues
+# Non-Desargues
 print('Desargues')
 D_points = set(range(10))
 D_collinearities = [
@@ -43,7 +41,7 @@ with open('Desargues/P_integer.pickle', 'wb') as f:
     pickle.dump(D_beweis, f)
 
 
-# incidence theorem Example4 from JRG Mechanical Theoem Proving in PG S.23
+# incidence theorem Example4 from JRG Mechanical Theorem Proving [18] in PG S.23
 print('Bsp incidence thm')
 Bsp_points = set(range(10))
 Bsp_collinearities = [
@@ -66,7 +64,7 @@ with open('Mech_Thm_proving_incidence_thm/P_integer.pickle', 'wb') as f:
 
 
 
-# 10-3-configurations that is non realizable from Coxeter S.6
+# 10-3-configurations that is non realizable from Meditation on Cevas theorem [21] S.6
 print('non-realizable 10-3-configuration')
 nr_points = set(range(10))
 nr_collinearities = [

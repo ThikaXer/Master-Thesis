@@ -10,13 +10,14 @@ from tqdm import tqdm
 from multiprocessing import Pool
 from pathlib import Path
 import shutil
-
+import time
 
 
 # Index-Dictionary for the $\varphi$s
 
 class Beweis:
     def __init__(self, rank, points, collinearities, name, maxiter = 11):
+        t_0 = time.time()
         self.directory = Path(name)
         if self.directory.is_dir():
             shutil.rmtree(self.directory)
@@ -46,14 +47,14 @@ class Beweis:
             self.linear_step()
             if len(self.cross_ratios) == 0:
                 with open(self.directory/'Status.txt', 'w') as f:
-                    print(f'Proof is done after linear step with {i} iterations! All cross-ratios are real.', file=f)
-                print(f'Proof is done after linear step with {i} iterations! All cross-ratios are real.')
+                    print(f'Proof is done after linear step with {i} iterations! All cross ratio phasess are real.', file=f)
+                print(f'Proof is done after linear step with {i} iterations! All cross ratio phasess are real.')
                 break
             print('Number of cross ratios left:', len(self.cross_ratios))
             if self.remaining_cr == len(self.cross_ratios):
                 with open(self.directory/'Status.txt', 'w') as f:
-                    print(f'No Proof. Iteration stationary with {self.remaining_cr} cross-ratios left.', file=f)
-                print(f'No Proof. Iteration stationary with {self.remaining_cr} cross-ratios left.')
+                    print(f'No Proof. Iteration stationary with {self.remaining_cr} cross ratio phasess left.', file=f)
+                print(f'No Proof. Iteration stationary with {self.remaining_cr} cross ratio phasess left.')
                 break
             else:
                 self.remaining_cr = len(self.cross_ratios)
@@ -62,6 +63,8 @@ class Beweis:
         if len(self.cross_ratios) > 0 or self.remaining_cr < len(self.cross_ratios):
             print('maxiter too small. Retry with bigger iteration boundary.')
 
+        self.t_elapsed = time.time() - t_0
+        print(f'{name} runtime {self.t_elapsed}')
         np.savetxt(self.directory/'GPR_matrix.txt', self.GPR, fmt='%i')
 
 
@@ -72,7 +75,7 @@ class Beweis:
     # methods to build and show a cross ratio vector
 
     def cross_ratio_vector(self, a, b, c, d, x):
-        # builds cross-ratio-vector with 1 for elements with pos exponent, -1 for elements with neg exponent and 0 else
+        # builds cross ratio vector with 1 for elements with pos exponent, -1 for elements with neg exponent and 0 else
         gpr = np.zeros(len(self.phis), dtype=np.int)
         gpr[self.get(x, a, c)] = 1
         gpr[self.get(x, b, d)] = 1
@@ -81,7 +84,7 @@ class Beweis:
         return gpr  # returns a vector
 
     def vector_to_equation(self, cr):
-        # returns cross ratio from cross-ratio vector
+        # returns cross ratio from cross ratio vector
         try:
             i1, i2 = np.argwhere(cr == 1).flat
         except Exception as e:
@@ -100,7 +103,7 @@ class Beweis:
     # All possibilities for cross ratios $cr(a, b \mid x, y)_c$, where $a, b, c$ are collinear
 
     def init_GPR(self):
-        self.GPR = set()  # Matrix of all known real-valued cross-ratios
+        self.GPR = set()  # Matrix of all known real-valued cross ratios
         for coll in self.collinearities:
             others = self.points - coll  # all possibilities for x,y
             for c in combinations(coll, self.rank-2):  # all possible viewpoints (d-2) elements
@@ -113,7 +116,7 @@ class Beweis:
                                 and {*c, b_permuted, y_permuted} not in self.collinearities:
                             # check all permutations from S_4 in cross ratio
                             gpr_permuted = self.cross_ratio_vector(a_permuted, b_permuted, x_permuted, y_permuted, c)
-                            # if permuted cross-ratio already in matrix GPR,
+                            # if permuted cross ratio already in matrix GPR,
                             # we do not need to ppend it again
                             positive = tuple(gpr_permuted)
                             negative = tuple(-gpr_permuted)
@@ -125,7 +128,7 @@ class Beweis:
 
     # signs are disregarded as we are only interested in the cross ratio being real or not
 
-    # Calculate if vector of cross-ratio $cr(a, b \mid c, d)_x$ is in the integer span by solving integer linear feasibility problem with gurobi
+    # Calculate if vector of cross ratio $cr(a, b \mid c, d)_x$ is in the integer span by solving integer linear feasibility problem with gurobi
 
     def solve_lin_span(self, abcdx):
         a, b, c, d, x = abcdx
@@ -156,7 +159,7 @@ class Beweis:
             print('Error code ' + str(e.errno) + ': ' + str(e))
         return solution
 
-    # Linear step: search cross-ratios, which are in span of matrix GPR andwrite them in list new_cross_ratios
+    # Linear step: search cross ratios, which are in span of matrix GPR andwrite them in list new_cross_ratios
     def linear_step(self):
         self.new_cross_ratios = set()
         GPR = list(self.GPR)
@@ -190,11 +193,11 @@ class Beweis:
         self.cross_ratios = self.cross_ratios - self.new_cross_ratios
         self.GPR = np.stack(list(reversed(sorted(GPR))), axis=0)
 
-    # Non-linear step: build for cross-ratios in new_cross_ratios all permutations from $S_4$ and append corresponding vectors to the matrix GPR
+    # Non-linear step: build for cross ratios in new_cross_ratios all permutations from $S_4$ and append corresponding vectors to the matrix GPR
 
     def non_linear_step(self):
         GPR = set(tuple(row) for row in self.GPR)
-        # build all permutations of cross-ratios in new_cross_ratios
+        # build all permutations of cross ratios in new_cross_ratios
         for a, b, c, d, x in tqdm(self.new_cross_ratios, desc = 'Non linear step', ncols=120):
             for pi_a, pi_b, pi_c, pi_d in permutations([a, b, c, d]):
                 if {*x, pi_a, pi_c} not in self.collinearities \
